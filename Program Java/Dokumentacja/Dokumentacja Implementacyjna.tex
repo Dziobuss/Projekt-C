@@ -74,7 +74,7 @@ Implementacja nawigacji wykorzystuje kombinację słuchaczy zdarzeń myszy:
 \end{itemize}
 
 \subsection{Mechanizm Drag \& Drop}
-Przesuwanie węzłów odbywa się wewnątrz \texttt{paintComponent}. Metoda \texttt{screenToWorld(Point p)} przelicza kliknięcie myszy na współrzędne układu grafu, uwzględniając aktualny zoom i przesunięcie, co pozwala na precyzyjne "chwycenie" węzła nawet przy dużym powiększeniu.
+Przesuwanie węzłów odbywa się wewnątrz \texttt{paintComponent}. Metoda \texttt{screenToWorld(Point p)} przelicza kliknięcie myszy na współrzędne układu grafu, uwzględniając aktualny zoom i przesunięcie, co pozwala na precyzyjne chwycenie węzła nawet przy dużym powiększeniu.
 
 \section{Komunikacja z Silnikiem Zewnętrznym}
 Wywołanie algorytmów zaimplementowanych w języku C (Fruchterman-Reingold / Tutte) odbywa się poprzez klasę \texttt{ProcessBuilder}. Mechanizm ten pozwala na uruchomienie skompilowanego pliku binarnego jako osobnego procesu systemowego.
