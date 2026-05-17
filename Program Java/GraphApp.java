@@ -12,16 +12,19 @@ import java.util.*;
 import java.util.List;
 import javax.imageio.ImageIO;
 
+// klasa przechowujaca dane pojedynczego wierzcholka
 class Node {
     int id; double x, y;
     public Node(int id, double x, double y) { this.id = id; this.x = x; this.y = y; }
 }
 
+// klasa definiujaca polaczenie miedzy dwoma wierzcholkami
 class Edge {
     String name; int u, v; double weight;
     public Edge(String name, int u, int v, double weight) { this.name = name; this.u = u; this.v = v; this.weight = weight; }
 }
 
+// glowna klasa aplikacji z interfejsem graficznym
 public class GraphApp extends JFrame {
     private GraphPanel graphPanel;
     private JComboBox<String> algoSelector;
@@ -30,19 +33,21 @@ public class GraphApp extends JFrame {
     private Node currentlySelectedNode = null;
     private boolean isUpdatingFields = false;
     
-    // Zapamiętana ścieżka do silnika C
+    // zmienna przechowujaca sciezke do programu obliczeniowego
     private String enginePath = null;
 
-    // NOWOCZESNA PALETA KOLORÓW
+    // definicje kolorow wykorzystywanych w elementach interfejsu
     private final Color PANEL_BG = new Color(230, 242, 255); 
     private final Color WIDGET_BG = Color.WHITE; 
     private final Color BTN_PRIMARY = new Color(30, 136, 229); 
     private final Color BTN_SUCCESS = new Color(0, 150, 136); 
     private final Color BTN_NEUTRAL = new Color(144, 164, 174); 
     
+    // deklaracje czcionki 
     private final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
     private final Font BOLD_FONT = new Font("Segoe UI", Font.BOLD, 14);
 
+    // konstruktor inicjalizujacy okno glowne
     public GraphApp() {
         super("Wizualizacja Grafów Planarnych");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -50,10 +55,12 @@ public class GraphApp extends JFrame {
         setLocationRelativeTo(null);
         getContentPane().setBackground(Color.WHITE);
         
+        // dodanie przestrzeni do rysowania grafu
         graphPanel = new GraphPanel();
         graphPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(180, 200, 220)));
         add(graphPanel, BorderLayout.CENTER);
         
+        // przypisanie akcji na klikniecie i przesuniecie wierzcholka
         graphPanel.setNodeSelectionListener(new GraphPanel.NodeSelectionListener() {
             @Override
             public void onNodeSelected(Node n) { currentlySelectedNode = n; updatePropertiesPanel(n); }
@@ -64,6 +71,7 @@ public class GraphApp extends JFrame {
         createSidePanel();
     }
 
+    // metoda tworzaca gorny pasek nawigacyjny
     private void createMenuBar() {
         JMenuBar mb = new JMenuBar();
         mb.setBackground(Color.WHITE);
@@ -89,6 +97,7 @@ public class GraphApp extends JFrame {
         setJMenuBar(mb);
     }
 
+    // budowanie prawego panelu z opcjami i parametrami
     private void createSidePanel() {
         JPanel sp = new JPanel();
         sp.setLayout(new BoxLayout(sp, BoxLayout.Y_AXIS));
@@ -167,12 +176,14 @@ public class GraphApp extends JFrame {
         add(sp, BorderLayout.EAST);
     }
     
+    // nakladanie wygladu na przyciski
     private void styleButton(JButton btn, Color bg) {
         btn.setFont(BOLD_FONT); btn.setBackground(bg); btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false); btn.setBorderPainted(false); btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setMaximumSize(new Dimension(260, 45)); btn.setAlignmentX(Component.CENTER_ALIGNMENT);
     }
 
+    // wyswietlanie aktualnych wspolrzednych dla wskazanego elementu
     private void updatePropertiesPanel(Node n) {
         isUpdatingFields = true;
         if (n == null) { 
@@ -187,31 +198,35 @@ public class GraphApp extends JFrame {
         isUpdatingFields = false;
     }
 
+    // zmiana polozenia na podstawie recznego wpisu uzytkownika
     private void applyManualCoordinates() {
         if (currentlySelectedNode != null && !isUpdatingFields) {
             try { currentlySelectedNode.x = Double.parseDouble(xField.getText()); currentlySelectedNode.y = Double.parseDouble(yField.getText()); graphPanel.repaint(); } catch (Exception ex) {}
         }
     }
 
+    // przygotowanie i wywolanie procesu z zewnetrznym programem obliczeniowym
     private void runCalculation() {
         if(graphPanel.getEdges().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Najpierw wczytaj strukturę krawędzi (Menu Plik)!", "Brak danych", JOptionPane.WARNING_MESSAGE); 
             return;
         }
 
-        // AUTOMATYCZNE WYSZUKIWANIE PLIKU .EXE (Radar ścieżek)
+        // proces szukania aplikacji wewnatrz folderow projektu
         if (enginePath == null) {
             String exeName = "graph_layout.exe";
             File dataDir = new File(currentTopoFile).getAbsoluteFile().getParentFile();
             
+            // predefiniowane pozycje na dysku
             File[] possiblePaths = {
                 new File(exeName),                                      
-                new File("Algorytm c/" + exeName),                      
-                new File("../Algorytm c/" + exeName),                   
-                new File("../../Algorytm c/" + exeName),                
+                new File("Algorytm c/pliki_zrodlowe_2_grupy/" + exeName), 
+                new File("../Algorytm c/pliki_zrodlowe_2_grupy/" + exeName),                   
+                new File("../../Algorytm c/pliki_zrodlowe_2_grupy/" + exeName),                
                 dataDir != null ? new File(dataDir, exeName) : new File(exeName) 
             };
 
+            // weryfikacja poprawnosci znaleziska
             for (File path : possiblePaths) {
                 if (path.exists() && !path.isDirectory()) {
                     enginePath = path.getAbsolutePath();
@@ -219,9 +234,10 @@ public class GraphApp extends JFrame {
                 }
             }
 
+            // aktywowanie okna dialogowego w przypadku niepowodzenia
             if (enginePath == null) {
                 JOptionPane.showMessageDialog(this, 
-                    "Nie udało się automatycznie znaleźć pliku graph_layout.exe.\nWskaż go ręcznie.", 
+                    "Nie udało się automatycznie znaleźć pliku graph_layout.exe w folderze 2 grupy.\nWskaż go ręcznie.", 
                     "Wskaż silnik C", JOptionPane.INFORMATION_MESSAGE);
                 JFileChooser ch = new JFileChooser();
                 ch.setDialogTitle("Wybierz plik graph_layout.exe");
@@ -233,24 +249,39 @@ public class GraphApp extends JFrame {
             }
         }
 
-        String algo = algoSelector.getSelectedItem().equals("Fruchterman-Reingold") ? "fr" : "smacof";
+        // przechwytywanie decyzji z pola wyboru algorytmu
+        boolean isTutte = algoSelector.getSelectedItem().equals("Tutte Embedding");
         
         try {
             File inputFile = new File(currentTopoFile).getAbsoluteFile();
             File outputFile = new File(inputFile.getParentFile(), "wynik.txt");
 
-            ProcessBuilder pb = new ProcessBuilder(
-                enginePath, "-i", inputFile.getAbsolutePath(), "-o", outputFile.getAbsolutePath(), "-a", algo
-            );
+            // skladanie sekwencji dla wiersza polecen
+            List<String> command = new ArrayList<>();
+            command.add(enginePath);
+            command.add(inputFile.getAbsolutePath()); 
+            command.add("-o");
+            command.add(outputFile.getAbsolutePath());
+            
+            // dolaczenie parametru dla specyficznego algorytmu
+            if (isTutte) {
+                command.add("-a"); 
+            }
+
+            // definicja wywolywania procesu
+            ProcessBuilder pb = new ProcessBuilder(command);
             pb.directory(new File(enginePath).getParentFile());
             Process p = pb.start();
             
+            // odczytywanie komunikatow bledu dzialajacego algorytmu
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
             StringBuilder errors = new StringBuilder(); String line;
             while ((line = errorReader.readLine()) != null) errors.append(line).append("\n");
             
+            // potwierdzanie zakonczenia dzialania zewnetrznego programu
             int exitCode = p.waitFor(); 
             if (exitCode == 0) { 
+                // wczytywanie rezultatow i srodkowanie elementow na ekranie
                 loadCoordinatesFromFile(outputFile.getAbsolutePath()); 
                 graphPanel.resetView(); 
                 JOptionPane.showMessageDialog(this, "Silnik C obliczył nowy układ grafu!"); 
@@ -265,6 +296,7 @@ public class GraphApp extends JFrame {
         }
     }
 
+    // pobieranie dokumentu definiujacego ksztalt i zawartosc grafu
     private void loadTopology() {
         JFileChooser ch = new JFileChooser();
         if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -281,11 +313,13 @@ public class GraphApp extends JFrame {
         }
     }
 
+    // wskazywanie pliku z gotowymi pozycjami dla elementow
     private void loadCoordinates() {
         JFileChooser ch = new JFileChooser();
         if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) loadCoordinatesFromFile(ch.getSelectedFile().getAbsolutePath());
     }
 
+    // parsowanie dokumentu i przypisywanie wartosci do obiektow w pamieci
     private void loadCoordinatesFromFile(String path) {
         Map<Integer, Node> nodes = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
@@ -298,6 +332,7 @@ public class GraphApp extends JFrame {
         } catch (Exception ex) {}
     }
 
+    // generowanie pliku z zapisanymi danymi geometrycznymi
     private void saveCoordinates() {
         if(graphPanel.getNodes().isEmpty()) return;
         JFileChooser ch = new JFileChooser();
@@ -308,6 +343,7 @@ public class GraphApp extends JFrame {
         }
     }
 
+    // przechwytywanie obszaru roboczego i tworzenie grafiki
     private void exportToPNG() {
         if(graphPanel.getNodes().isEmpty()) return;
         JFileChooser ch = new JFileChooser(); ch.setFileFilter(new FileNameExtensionFilter("PNG", "png"));
@@ -319,12 +355,14 @@ public class GraphApp extends JFrame {
         }
     }
 
+    // metoda wywolywana podczas wlaczania aplikacji
     public static void main(String[] args) {
         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
         SwingUtilities.invokeLater(() -> new GraphApp().setVisible(true));
     }
 }
 
+// panel zarzadzajacy manipulacja i renderowaniem grafiki
 class GraphPanel extends JPanel {
     private Map<Integer, Node> nodes = new HashMap<>();
     private Map<Integer, Point2D.Double> snapshots = new HashMap<>();
@@ -335,9 +373,11 @@ class GraphPanel extends JPanel {
     private Point dragStart = null;
     private boolean showLabels = true, showWeights = true;
 
+    // interfejs umozliwiajacy przekazywanie zdarzen na zewnatrz
     public interface NodeSelectionListener { void onNodeSelected(Node n); void onNodeMoved(Node n); }
     private NodeSelectionListener selectionListener;
 
+    // definicje podstawowych akcji dla interakcji urzadzenia wskazujacego
     public GraphPanel() {
         setBackground(Color.WHITE);
         addMouseWheelListener(e -> {
@@ -371,33 +411,73 @@ class GraphPanel extends JPanel {
         });
     }
 
+    // rejestrowanie obiektu nasluchujacego
     public void setNodeSelectionListener(NodeSelectionListener l) { this.selectionListener = l; }
+    
+    // podstawianie nowej mapy danych z zapisywaniem punktu przywracania
     public void setNodes(Map<Integer, Node> n) {
         this.nodes = n; snapshots.clear();
         for(Node node : n.values()) snapshots.put(node.id, new Point2D.Double(node.x, node.y));
         selectedNode = null; if(selectionListener!=null) selectionListener.onNodeSelected(null); resetView();
     }
+    
+    // wczytywanie zapamietanych stanow wierzcholkow
     public void resetNodePositions() {
         for(Node n : nodes.values()) { Point2D.Double p = snapshots.get(n.id); if(p!=null) { n.x = p.x; n.y = p.y; } }
         repaint();
     }
+    
+    // ladowanie listy krawedzi i odswiezanie
     public void setEdges(List<Edge> e) { this.edges = e; repaint(); }
     public void zoomIn() { zoom *= 1.2; repaint(); }
     public void zoomOut() { zoom /= 1.2; repaint(); }
-    public void resetView() { zoom = 1.0; px = getWidth()/2.0; py = getHeight()/2.0; repaint(); }
+    
+    // obliczanie proporcji grafu i srodkowanie go na polu roboczym
+    public void resetView() {
+        zoom = 1.0;
+        if (nodes.isEmpty()) {
+            px = getWidth() / 2.0;
+            py = getHeight() / 2.0;
+        } else {
+            // szukanie ostatecznych granic rysunku
+            double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE;
+            double minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
+            
+            for (Node n : nodes.values()) {
+                if (n.x < minX) minX = n.x;
+                if (n.x > maxX) maxX = n.x;
+                if (n.y < minY) minY = n.y;
+                if (n.y > maxY) maxY = n.y;
+            }
+            
+            // wyliczanie punktu bedacego centrum struktury
+            double centerX = (minX + maxX) / 2.0;
+            double centerY = (minY + maxY) / 2.0;
+            
+            // pobieranie mnoznika korekcyjnego
+            double s = getDynamicScale();
+            
+            // stosowanie korekty wspolrzednych i centrowanie
+            px = (getWidth() / 2.0) - (centerX * s);
+            py = (getHeight() / 2.0) - (centerY * s);
+        }
+        repaint();
+    }
+    
+    // rozrzucanie punktow w granicach ekranu dla ulatwienia podgladu
     public void randomizeNodes() { Random r = new Random(); for(Node n : nodes.values()) { n.x = (r.nextDouble()-0.5)*800; n.y = (r.nextDouble()-0.5)*800; } repaint(); }
     public void setShowLabels(boolean s) { this.showLabels = s; repaint(); }
     public void setShowWeights(boolean s) { this.showWeights = s; repaint(); }
     public Map<Integer, Node> getNodes() { return nodes; }
     public List<Edge> getEdges() { return edges; }
     
-    // Konwersja uwzględnia teraz nasz mnożnik skali (autoScale)
+    // adaptacja pozycji kursora do wielkosci i przesuniecia elementow
     private Point2D screenToWorld(Point p) { 
         double autoScale = getDynamicScale();
         return new Point2D.Double(((p.x-px)/zoom) / autoScale, ((p.y-py)/zoom) / autoScale); 
     }
 
-    // Inteligentny radar skali – jeśli wykryje mikro-współrzędne z Tutte/SMACOF, podbije je x150
+    // wyznaczanie prawidlowego powiekszenia dla liczb ulokowanych blisko zera
     private double getDynamicScale() {
         double maxDist = 0;
         for (Node n : nodes.values()) {
@@ -407,29 +487,32 @@ class GraphPanel extends JPanel {
         return (maxDist > 0 && maxDist < 15) ? 150.0 : 1.0;
     }
 
+    // metoda nadpisujaca rysowanie grafiki w panelu
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
+        // wyznaczanie rozstwow grubosci dla uzytych wag
         double maxW = Double.MIN_VALUE, minW = Double.MAX_VALUE;
         for (Edge e : edges) { if (e.weight > maxW) maxW = e.weight; if (e.weight < minW) minW = e.weight; }
         
         AffineTransform oldAt = g2.getTransform();
         g2.translate(px, py); g2.scale(zoom, zoom);
         
-        // Pobieramy nasz dynamiczny mnożnik skali
+        // aplikowanie wczesniej wyliczonej korekty wielkosci
         double s = getDynamicScale();
 
         g2.setStroke(new BasicStroke(2.0f / (float)zoom));
+        
+        // proces malowania linii miedzy punktami
         for (Edge e : edges) {
             Node n1 = nodes.get(e.u), n2 = nodes.get(e.v);
             if (n1 != null && n2 != null) {
                 float r = (maxW == minW) ? 0.5f : (float)((e.weight - minW) / (maxW - minW));
                 g2.setColor(new Color(r, 1.0f - r, 0.0f, 0.6f));
                 
-                // Mnożymy przez 's' PRZED rzutowaniem na (int), żeby nie stracić precyzji!
                 g2.drawLine((int)(n1.x * s), (int)(n1.y * s), (int)(n2.x * s), (int)(n2.y * s));
                 
                 if (showWeights) { 
@@ -441,6 +524,8 @@ class GraphPanel extends JPanel {
         }
         
         int r = Math.max(3, (int)(15 / zoom));
+        
+        // nanoszenie ksztaltow geometrycznych oznaczajacych glowne elementy
         for (Node n : nodes.values()) {
             int cx = (int)(n.x * s);
             int cy = (int)(n.y * s);
