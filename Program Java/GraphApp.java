@@ -30,12 +30,15 @@ public class GraphApp extends JFrame {
     private Node currentlySelectedNode = null;
     private boolean isUpdatingFields = false;
     
+    // Zapamiętana ścieżka do silnika C
+    private String enginePath = null;
+
     // NOWOCZESNA PALETA KOLORÓW
-    private final Color PANEL_BG = new Color(230, 242, 255); // Jasny, pastelowy niebieski
-    private final Color WIDGET_BG = Color.WHITE; // Tło dla właściwości węzła
-    private final Color BTN_PRIMARY = new Color(30, 136, 229); // Głęboki niebieski
-    private final Color BTN_SUCCESS = new Color(0, 150, 136); // Morski / Teal
-    private final Color BTN_NEUTRAL = new Color(144, 164, 174); // Stalowy szary
+    private final Color PANEL_BG = new Color(230, 242, 255); 
+    private final Color WIDGET_BG = Color.WHITE; 
+    private final Color BTN_PRIMARY = new Color(30, 136, 229); 
+    private final Color BTN_SUCCESS = new Color(0, 150, 136); 
+    private final Color BTN_NEUTRAL = new Color(144, 164, 174); 
     
     private final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
     private final Font BOLD_FONT = new Font("Segoe UI", Font.BOLD, 14);
@@ -48,7 +51,6 @@ public class GraphApp extends JFrame {
         getContentPane().setBackground(Color.WHITE);
         
         graphPanel = new GraphPanel();
-        // Cienka, ładna ramka oddzielająca płótno od panelu bocznego
         graphPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(180, 200, 220)));
         add(graphPanel, BorderLayout.CENTER);
         
@@ -65,7 +67,7 @@ public class GraphApp extends JFrame {
     private void createMenuBar() {
         JMenuBar mb = new JMenuBar();
         mb.setBackground(Color.WHITE);
-        mb.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200, 210, 225))); // Kreska pod menu
+        mb.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200, 210, 225))); 
         
         JMenu m1 = new JMenu(" Plik "); m1.setFont(MAIN_FONT);
         JMenuItem i1 = new JMenuItem("Otwórz strukturę (.txt)..."); i1.addActionListener(e -> loadTopology());
@@ -94,7 +96,6 @@ public class GraphApp extends JFrame {
         sp.setBackground(PANEL_BG);
         sp.setPreferredSize(new Dimension(300, 0));
 
-        // 1. WYBÓR ALGORYTMU
         JLabel l1 = new JLabel("Wybór algorytmu:");
         l1.setFont(BOLD_FONT); l1.setAlignmentX(Component.CENTER_ALIGNMENT);
         
@@ -106,15 +107,14 @@ public class GraphApp extends JFrame {
         styleButton(runBtn, BTN_PRIMARY);
         runBtn.addActionListener(e -> runCalculation());
 
-        // 2. WŁAŚCIWOŚCI WĘZŁA (Karta/Widget)
         JLabel lProps = new JLabel("Właściwości węzła:");
         lProps.setFont(BOLD_FONT); lProps.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         JPanel propsBox = new JPanel(new GridLayout(3, 2, 8, 8));
         propsBox.setBackground(WIDGET_BG);
         propsBox.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(200, 215, 230), 1, true), // Zaokrąglona ramka
-            new EmptyBorder(15, 15, 15, 15) // Wewnętrzny margines
+            new LineBorder(new Color(200, 215, 230), 1, true), 
+            new EmptyBorder(15, 15, 15, 15) 
         ));
         propsBox.setMaximumSize(new Dimension(260, 110)); 
         propsBox.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -137,7 +137,6 @@ public class GraphApp extends JFrame {
         lHint.setFont(new Font("Segoe UI", Font.ITALIC, 11)); lHint.setForeground(new Color(100, 120, 140));
         lHint.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // 3. WYŚWIETLANIE I PRZYCISKI
         JLabel l2 = new JLabel("Wyświetlanie:");
         l2.setFont(BOLD_FONT); l2.setAlignmentX(Component.CENTER_ALIGNMENT);
         
@@ -157,13 +156,10 @@ public class GraphApp extends JFrame {
         styleButton(resViewBtn, BTN_NEUTRAL);
         resViewBtn.addActionListener(e -> graphPanel.resetView());
 
-        // SKŁADANIE DO KUPY
         sp.add(l1); sp.add(Box.createRigidArea(new Dimension(0, 8))); sp.add(algoSelector); sp.add(Box.createRigidArea(new Dimension(0, 15))); sp.add(runBtn);
         sp.add(Box.createRigidArea(new Dimension(0, 35))); 
-        
         sp.add(lProps); sp.add(Box.createRigidArea(new Dimension(0, 8))); sp.add(propsBox); sp.add(Box.createRigidArea(new Dimension(0, 5))); sp.add(lHint);
         sp.add(Box.createRigidArea(new Dimension(0, 35))); 
-        
         sp.add(l2); sp.add(Box.createRigidArea(new Dimension(0, 8))); sp.add(c1); sp.add(c2);
         sp.add(Box.createRigidArea(new Dimension(0, 20))); sp.add(resPosBtn); sp.add(Box.createRigidArea(new Dimension(0, 10))); sp.add(resViewBtn);
         sp.add(Box.createVerticalGlue());
@@ -171,16 +167,10 @@ public class GraphApp extends JFrame {
         add(sp, BorderLayout.EAST);
     }
     
-    // Pomocnicza funkcja do nowoczesnego formatowania przycisków
     private void styleButton(JButton btn, Color bg) {
-        btn.setFont(BOLD_FONT);
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false); // Ukrywa brzydką, domyślną ramkę Swing
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setMaximumSize(new Dimension(260, 45));
-        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn.setFont(BOLD_FONT); btn.setBackground(bg); btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false); btn.setBorderPainted(false); btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setMaximumSize(new Dimension(260, 45)); btn.setAlignmentX(Component.CENTER_ALIGNMENT);
     }
 
     private void updatePropertiesPanel(Node n) {
@@ -203,64 +193,75 @@ public class GraphApp extends JFrame {
         }
     }
 
-// Zmienna, która zapamięta ścieżkę do silnika C
-    private String enginePath = null;
-
     private void runCalculation() {
         if(graphPanel.getEdges().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Najpierw wczytaj strukturę krawędzi (Menu Plik)!", "Brak danych", JOptionPane.WARNING_MESSAGE); 
             return;
         }
 
-        // Szukamy Twojego nowego pliku .exe
+        // AUTOMATYCZNE WYSZUKIWANIE PLIKU .EXE (Radar ścieżek)
         if (enginePath == null) {
-            JOptionPane.showMessageDialog(this, 
-                "Teraz wskaż swój skompilowany plik silnika C (graph_layout.exe).\nZrobię to tylko raz i zapamiętam!", 
-                "Wskaż silnik", JOptionPane.INFORMATION_MESSAGE);
-                
-            JFileChooser ch = new JFileChooser();
-            ch.setDialogTitle("Wybierz plik graph_layout.exe");
-            if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                enginePath = ch.getSelectedFile().getAbsolutePath();
-            } else {
-                return; // Użytkownik anulował
+            String exeName = "graph_layout.exe";
+            File dataDir = new File(currentTopoFile).getAbsoluteFile().getParentFile();
+            
+            File[] possiblePaths = {
+                new File(exeName),                                      
+                new File("Algorytm c/" + exeName),                      
+                new File("../Algorytm c/" + exeName),                   
+                new File("../../Algorytm c/" + exeName),                
+                dataDir != null ? new File(dataDir, exeName) : new File(exeName) 
+            };
+
+            for (File path : possiblePaths) {
+                if (path.exists() && !path.isDirectory()) {
+                    enginePath = path.getAbsolutePath();
+                    break; 
+                }
+            }
+
+            if (enginePath == null) {
+                JOptionPane.showMessageDialog(this, 
+                    "Nie udało się automatycznie znaleźć pliku graph_layout.exe.\nWskaż go ręcznie.", 
+                    "Wskaż silnik C", JOptionPane.INFORMATION_MESSAGE);
+                JFileChooser ch = new JFileChooser();
+                ch.setDialogTitle("Wybierz plik graph_layout.exe");
+                if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                    enginePath = ch.getSelectedFile().getAbsolutePath();
+                } else {
+                    return;
+                }
             }
         }
 
         String algo = algoSelector.getSelectedItem().equals("Fruchterman-Reingold") ? "fr" : "smacof";
         
         try {
-            // Uruchamiamy plik C natywnie w Windowsie (BEZ WSL!)
-            ProcessBuilder pb = new ProcessBuilder(enginePath, "-i", currentTopoFile, "-o", "wynik.txt", "-a", algo);
-            
-            // Ustawiamy folder roboczy tam, gdzie leży plik dane.txt
-            File workingDirectory = new File(currentTopoFile).getParentFile();
-            if (workingDirectory != null) {
-                pb.directory(workingDirectory);
-            }
-            
+            File inputFile = new File(currentTopoFile).getAbsoluteFile();
+            File outputFile = new File(inputFile.getParentFile(), "wynik.txt");
+
+            ProcessBuilder pb = new ProcessBuilder(
+                enginePath, "-i", inputFile.getAbsolutePath(), "-o", outputFile.getAbsolutePath(), "-a", algo
+            );
+            pb.directory(new File(enginePath).getParentFile());
             Process p = pb.start();
             
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            StringBuilder errors = new StringBuilder();
-            String line;
+            StringBuilder errors = new StringBuilder(); String line;
             while ((line = errorReader.readLine()) != null) errors.append(line).append("\n");
             
             int exitCode = p.waitFor(); 
-            
             if (exitCode == 0) { 
-                // Wczytujemy plik wynik.txt, który właśnie wypluł C
-                File wynikFile = new File(workingDirectory, "wynik.txt");
-                loadCoordinatesFromFile(wynikFile.getAbsolutePath()); 
-                
+                loadCoordinatesFromFile(outputFile.getAbsolutePath()); 
                 graphPanel.resetView(); 
                 JOptionPane.showMessageDialog(this, "Silnik C obliczył nowy układ grafu!"); 
             } else {
-                JOptionPane.showMessageDialog(this, "Silnik C zwrócił błąd:\n" + errors.toString(), "Awaria w C", JOptionPane.ERROR_MESSAGE);
+                String errorMsg = errors.toString().trim();
+                if (errorMsg.isEmpty()) errorMsg = "Program w C zwrócił kod błędu: " + exitCode;
+                JOptionPane.showMessageDialog(this, "Silnik C napotkał problem:\n" + errorMsg, "Awaria w C", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) { 
-            JOptionPane.showMessageDialog(this, "Błąd uruchomienia:\n" + ex.getMessage(), "Błąd Systemu", JOptionPane.ERROR_MESSAGE); 
-            enginePath = null; // Jeśli coś poszło nie tak, zresetuj ścieżkę
+            JOptionPane.showMessageDialog(this, "Błąd systemu podczas uruchamiania:\n" + ex.getMessage(), "Błąd Systemu", JOptionPane.ERROR_MESSAGE); 
+            enginePath = null; 
         }
     }
 
@@ -389,33 +390,66 @@ class GraphPanel extends JPanel {
     public void setShowWeights(boolean s) { this.showWeights = s; repaint(); }
     public Map<Integer, Node> getNodes() { return nodes; }
     public List<Edge> getEdges() { return edges; }
-    private Point2D screenToWorld(Point p) { return new Point2D.Double((p.x-px)/zoom, (p.y-py)/zoom); }
+    
+    // Konwersja uwzględnia teraz nasz mnożnik skali (autoScale)
+    private Point2D screenToWorld(Point p) { 
+        double autoScale = getDynamicScale();
+        return new Point2D.Double(((p.x-px)/zoom) / autoScale, ((p.y-py)/zoom) / autoScale); 
+    }
+
+    // Inteligentny radar skali – jeśli wykryje mikro-współrzędne z Tutte/SMACOF, podbije je x150
+    private double getDynamicScale() {
+        double maxDist = 0;
+        for (Node n : nodes.values()) {
+            maxDist = Math.max(maxDist, Math.abs(n.x));
+            maxDist = Math.max(maxDist, Math.abs(n.y));
+        }
+        return (maxDist > 0 && maxDist < 15) ? 150.0 : 1.0;
+    }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
         double maxW = Double.MIN_VALUE, minW = Double.MAX_VALUE;
         for (Edge e : edges) { if (e.weight > maxW) maxW = e.weight; if (e.weight < minW) minW = e.weight; }
+        
         AffineTransform oldAt = g2.getTransform();
         g2.translate(px, py); g2.scale(zoom, zoom);
+        
+        // Pobieramy nasz dynamiczny mnożnik skali
+        double s = getDynamicScale();
+
         g2.setStroke(new BasicStroke(2.0f / (float)zoom));
         for (Edge e : edges) {
             Node n1 = nodes.get(e.u), n2 = nodes.get(e.v);
             if (n1 != null && n2 != null) {
                 float r = (maxW == minW) ? 0.5f : (float)((e.weight - minW) / (maxW - minW));
                 g2.setColor(new Color(r, 1.0f - r, 0.0f, 0.6f));
-                g2.drawLine((int)n1.x, (int)n1.y, (int)n2.x, (int)n2.y);
-                if (showWeights) { g2.setColor(Color.DARK_GRAY); g2.setFont(new Font("Segoe UI", Font.BOLD, Math.max(8, (int)(12/zoom)))); g2.drawString(String.format(Locale.US, "%.1f", e.weight), (int)((n1.x+n2.x)/2), (int)((n1.y+n2.y)/2)-5); }
+                
+                // Mnożymy przez 's' PRZED rzutowaniem na (int), żeby nie stracić precyzji!
+                g2.drawLine((int)(n1.x * s), (int)(n1.y * s), (int)(n2.x * s), (int)(n2.y * s));
+                
+                if (showWeights) { 
+                    g2.setColor(Color.DARK_GRAY); 
+                    g2.setFont(new Font("Segoe UI", Font.BOLD, Math.max(8, (int)(12/zoom)))); 
+                    g2.drawString(String.format(Locale.US, "%.1f", e.weight), (int)(((n1.x+n2.x)/2)*s), (int)(((n1.y+n2.y)/2)*s)-5); 
+                }
             }
         }
+        
         int r = Math.max(3, (int)(15 / zoom));
         for (Node n : nodes.values()) {
-            if (n == selectedNode) { g2.setColor(new Color(255, 171, 0)); g2.fillOval((int)n.x-r, (int)n.y-r, r*2, r*2); g2.setColor(new Color(216, 67, 21)); g2.setStroke(new BasicStroke(3.0f/(float)zoom)); }
-            else { g2.setColor(new Color(66, 165, 245)); g2.fillOval((int)n.x-r, (int)n.y-r, r*2, r*2); g2.setColor(new Color(30, 136, 229)); g2.setStroke(new BasicStroke(1.5f/(float)zoom)); }
-            g2.drawOval((int)n.x-r, (int)n.y-r, r*2, r*2);
-            if (showLabels) { g2.setColor(Color.BLACK); g2.setFont(new Font("Segoe UI", Font.BOLD, Math.max(9, (int)(13/zoom)))); g2.drawString(String.valueOf(n.id), (int)n.x-r+2, (int)n.y-r-6); }
+            int cx = (int)(n.x * s);
+            int cy = (int)(n.y * s);
+            
+            if (n == selectedNode) { g2.setColor(new Color(255, 171, 0)); g2.fillOval(cx-r, cy-r, r*2, r*2); g2.setColor(new Color(216, 67, 21)); g2.setStroke(new BasicStroke(3.0f/(float)zoom)); }
+            else { g2.setColor(new Color(66, 165, 245)); g2.fillOval(cx-r, cy-r, r*2, r*2); g2.setColor(new Color(30, 136, 229)); g2.setStroke(new BasicStroke(1.5f/(float)zoom)); }
+            g2.drawOval(cx-r, cy-r, r*2, r*2);
+            
+            if (showLabels) { g2.setColor(Color.BLACK); g2.setFont(new Font("Segoe UI", Font.BOLD, Math.max(9, (int)(13/zoom)))); g2.drawString(String.valueOf(n.id), cx-r+2, cy-r-6); }
         }
         g2.setTransform(oldAt);
     }
