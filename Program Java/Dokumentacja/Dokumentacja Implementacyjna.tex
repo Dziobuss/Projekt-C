@@ -10,20 +10,27 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{tocloft}
 \usepackage{float}
+\usepackage{enumitem}
 \usepackage{listings}
 
 \renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+
 \onehalfspacing
 
-% Styl dla fragmentów kodu
 \lstset{
     basicstyle=\ttfamily\small,
     breaklines=true,
     frame=single,
-    
+    captionpos=b,
+    extendedchars=true,
+    keepspaces=true,
+    columns=fixed,
+    commentstyle=\normalfont\ttfamily,
+    showstringspaces=false,
+    literate={ą}{{\k{a}}}1 {ć}{{\'c}}1 {ę}{{\k{e}}}1 {ł}{{\l{}}}1 {ń}{{\'n}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ź}{{\'z}}1 {ż}{{\.z}}1 {Ą}{{\k{A}}}1 {Ć}{{\'C}}1 {Ę}{{\k{E}}}1 {Ł}{{\L{}}}1 {Ń}{{\'N}}1 {Ó}{{\'O}}1 {Ś}{{\'S}}1 {Ź}{{\'Z}}1 {Ż}{{\.Z}}1
 }
 
-\title{\vspace*{3cm} \textbf{Dokumentacja Implementacyjna}\\Wizualizacja Grafów Planarnych (Java)}}
+\title{\vspace*{3cm} \textbf{Dokumentacja Implementacyjna Java}}
 \author{Autorzy: Mateusz Bombola \\ Kajetan Karwacki}
 \date{\today}
 
@@ -36,80 +43,62 @@
 \tableofcontents
 \newpage
 
-\section{Architektura Aplikacji}
-Program został zaimplementowany w języku Java z wykorzystaniem biblioteki \textbf{Swing}. Architektura opiera się na podziale na model danych, panel renderujący (View) oraz ramkę główną pełniącą rolę kontrolera (Controller).
+\section{Cel dokumentu}
+Dokument ten stanowi szczegółową specyfikację implementacyjną interfejsu graficznego (GUI) w języku Java, przeznaczonego do wizualizacji grafów planarnych. Opisuje on architekturę wewnętrzną aplikacji, zastosowane klasy, struktury danych oraz techniki integracji z zewnętrznym silnikiem obliczeniowym napisanym w języku C.
 
-\subsection{Główne klasy i struktury danych}
+\section{Architektura systemu i podział klas}
+Aplikacja opiera się na podejściu obiektowym i wykorzystuje bibliotekę Swing do budowy interfejsu użytkownika. System podzielono na warstwę modelu danych oraz warstwę widoku i sterowania.
+
+\subsection{Struktury modelu danych}
+Do przechowywania w pamięci informacji o strukturze grafu zdefiniowano dwie klasy pomocnicze:
 \begin{itemize}
-    \item \texttt{Node}: Prosta klasa modelu przechowująca identyfikator (\texttt{int id}) oraz współrzędne (\texttt{double x, y}).
-    \item \texttt{Edge}: Przechowuje nazwę krawędzi, identyfikatory wierzchołków incydentnych oraz wagę (\texttt{double weight}).
-    \item \texttt{GraphPanel}: Klasa dziedzicząca po \texttt{JPanel}, odpowiedzialna za całą logikę graficzną i interakcje myszą.
-    \item \texttt{GraphApp}: Główna klasa aplikacji (\texttt{JFrame}), zarządzająca menu, panelem bocznym i komunikacją z procesami zewnętrznymi.
+    \item \textbf{\texttt{Node}:} Reprezentuje wierzchołek grafu. Przechowuje publiczne pola \texttt{id} (typ \texttt{int}) oraz współrzędne kartezjańskie \texttt{x} i \texttt{y} (typ \texttt{double}).
+    \item \textbf{\texttt{Edge}:} Reprezentuje krawędź łączącą dwa wierzchołki. Zawiera nazwę \texttt{name} (\texttt{String}), identyfikatory węzłów \texttt{u} i \texttt{v} (\texttt{int}) oraz wagę połączenia \texttt{weight} (\texttt{double}).
 \end{itemize}
 
-\section{Szczegóły Implementacyjne Modułów}
-
-\subsection{Zarządzanie stanem grafu}
-Aplikacja wykorzystuje kolekcje z pakietu \texttt{java.util} do efektywnego zarządzania danymi:
+\subsection{Logika aplikacji i interfejs graficzny}
+Główna mechanika programu zawarta jest w dwóch podstawowych klasach zarządzających oknem i renderowaniem grafiki:
 \begin{itemize}
-    \item \texttt{Map<Integer, Node> nodes}: Przechowywanie węzłów, gdzie kluczem jest ich ID. Pozwala to na szybki dostęp ($O(1)$) podczas rysowania krawędzi.
-    \item \texttt{Map<Integer, Point2D.Double> snapshots}: Przechowuje pierwotne pozycje węzłów po wczytaniu współrzędnych. Funkcja \texttt{resetNodePositions()} wykorzystuje tę mapę do przywrócenia stanu grafu po ręcznych modyfikacjach użytkownika.
+    \item \textbf{\texttt{GraphApp} (dziedziczy po \texttt{JFrame}):} Klasa główna inicjalizująca interfejs użytkownika. Odpowiada za budowę paska menu, panelu bocznego oraz logikę zdarzeń (obsługa przycisków, pól tekstowych). Zarządza procesem komunikacji z plikiem wykonywalnym języka C.
+    \item \textbf{\texttt{GraphPanel} (dziedziczy po \texttt{JPanel}):} Klasa silnika renderującego. Nadpisuje metodę \texttt{paintComponent(Graphics g)} w celu rysowania węzłów i krawędzi przy pomocy \texttt{Graphics2D}. Przechowuje struktury danych topologii: węzły w słowniku \texttt{Map<Integer, Node>} (zapewniając szybki dostęp po indeksie) oraz krawędzie w liście \texttt{List<Edge>}.
 \end{itemize}
 
-\subsection{Renderowanie i Transformacje}
-W klasie \texttt{GraphPanel} zastosowano zaawansowane renderowanie przy użyciu \texttt{Graphics2D}:
-\begin{itemize}
-    \item \textbf{AffineTransform}: Wykorzystywany do operacji \texttt{translate} i \texttt{scale}. Pozwala to na separację współrzędnych świata (węzłów) od współrzędnych ekranu.
-    \item \textbf{Antyaliasing}: Włączony poprzez \texttt{RenderingHints}, co zapewnia wysoką jakość rysowanych linii i kół.
-    \item \textbf{Dynamiczne kolorowanie krawędzi}: Kolor krawędzi jest obliczany na podstawie jej wagi względem ekstremów (min/max weight) wczytanego grafu. Wykorzystywana jest składowa czerwona (R) i zielona (G) obiektu \texttt{Color}, tworząc gradient od zieleni dla małych wag do czerwieni dla dużych.
-\end{itemize}
+\section{Szczegóły implementacyjne modułu renderującego}
 
-\section{Interakcja i Obsługa Zdarzeń}
+\subsection{Rysowanie elementów i transformacje}
+Proces renderowania odbywa się z wykorzystaniem antyaliasingu (\texttt{RenderingHints.KEY\_ANTIALIASING}). 
+Aplikacja korzysta z obiektu \texttt{AffineTransform} do płynnego przesuwania układu współrzędnych (translacja za pomocą zmiennych \texttt{px} i \texttt{py}) oraz powiększania/pomniejszania widoku (skalowanie za pomocą zmiennej \texttt{zoom}).
 
-\subsection{System Nawigacji}
-Implementacja nawigacji wykorzystuje kombinację słuchaczy zdarzeń myszy:
-\begin{itemize}
-    \item \textbf{Zoom}: Obsługiwany przez \texttt{MouseWheelListener}. Skalowanie odbywa się względem aktualnej pozycji kursora myszy na ekranie.
-    \item \textbf{Panning (Przesuwanie)}: Realizowane poprzez \texttt{MouseMotionListener}. Program zapamiętuje punkt startowy (\texttt{dragStart}) i aktualizuje przesunięcie (\texttt{px, py}) podczas przeciągania.
-\end{itemize}
+Krawędzie rysowane są z dynamiczną zmianą koloru (gradient) od zielonego do czerwonego, gdzie odcień zależy od wagi krawędzi znormalizowanej w przedziale między minimalną a maksymalną załadowaną wagą.
 
-\subsection{Mechanizm Drag \& Drop}
-Przesuwanie węzłów odbywa się wewnątrz \texttt{paintComponent}. Metoda \texttt{screenToWorld(Point p)} przelicza kliknięcie myszy na współrzędne układu grafu, uwzględniając aktualny zoom i przesunięcie, co pozwala na precyzyjne chwycenie węzła nawet przy dużym powiększeniu.
+\subsection{Inteligentna adaptacja skali}
+Zaimplementowano mechanizm \texttt{getDynamicScale()}, który rozwiązuje problem mikroskopijnych współrzędnych generowanych przez niektóre algorytmy (np. Tutte Embedding). Funkcja skanuje wyliczone pozycje i w przypadku, gdy największa bezwzględna wartość współrzędnej węzła jest mniejsza niż 15, nakłada na cały układ mnożnik (skalę) wynoszącą 150.0. Zabezpiecza to przed utratą precyzji podczas ostatecznego rzutowania współrzędnych zmiennoprzecinkowych na wartości całkowitoliczbowe (\texttt{int}) przed narysowaniem pikseli na ekranie.
 
-\section{Komunikacja z Silnikiem Zewnętrznym}
-Wywołanie algorytmów zaimplementowanych w języku C (Fruchterman-Reingold / Tutte) odbywa się poprzez klasę \texttt{ProcessBuilder}. Mechanizm ten pozwala na uruchomienie skompilowanego pliku binarnego jako osobnego procesu systemowego.
+\subsection{Automatyczne centrowanie kamery}
+Metoda \texttt{resetView()} wykorzystuje algorytm poszukiwania skrajnych punktów wczytanego grafu w celu wyznaczenia jego matematycznego obrysu oraz środka ciężkości. Po odnalezieniu wartości \texttt{minX}, \texttt{maxX}, \texttt{minY}, \texttt{maxY}, obliczane jest przesunięcie panelu (\texttt{px}, \texttt{py}), które środkuje wyrenderowany układ na ekranie użytkownika niezależnie od wyjściowej skali grafu.
 
-Uruchomienie procesu w kodzie zrealizowano w następujący sposób:
+\section{Integracja z silnikiem obliczeniowym C}
+Integracja między środowiskiem Java a programem w języku C zrealizowana jest za pomocą wywołań systemowych w obrębie klasy \texttt{GraphApp}.
 
+\subsection{Algorytm wyszukiwania ścieżki}
+Aby uniknąć konieczności ręcznego definiowania ścieżki do pliku wykonywalnego przez użytkownika, przed uruchomieniem silnika program skanuje zdefiniowaną tablicę ścieżek relatywnych (\texttt{possiblePaths}). Poszukiwany jest plik \texttt{graph\_layout.exe} w folderze roboczym Javy, dedykowanym folderze \texttt{Algorytm c/pliki\_zrodlowe\_2\_grupy/} oraz odpowiednich folderach nadrzędnych. W przypadku niepowodzenia aktywowany jest plan awaryjny wywołujący graficzne okno \texttt{JFileChooser}.
+
+\subsection{Wywołanie procesu i asynchroniczność}
+Aplikacja wykorzystuje klasę \texttt{ProcessBuilder} do złożenia komendy wywołującej. Parametry przekazywane są w postaci listy struktur \texttt{String}, co ułatwia zarządzanie argumentami programu docelowego:
 \begin{lstlisting}[language=Java]
-Process p = new ProcessBuilder(
-    enginePath, 
-    "-i", currentTopoFile, 
-    "-o", "wynik.txt", 
-    "-a", algo
-).start();
+List<String> command = new ArrayList<>();
+command.add(enginePath);
+command.add(inputFile.getAbsolutePath());
+command.add("-o");
+command.add(outputFile.getAbsolutePath());
+if (isTutte) {
+    command.add("-a");
+}
+ProcessBuilder pb = new ProcessBuilder(command);
 \end{lstlisting}
+Po uruchomieniu procesu Java wywołuje metodę \texttt{p.waitFor()}, zawieszając wykonanie bieżącego wątku do momentu zakończenia obliczeń. Strumień błędów programu docelowego (\texttt{getErrorStream()}) jest stale nasłuchiwany za pomocą klasy \texttt{BufferedReader}, co umożliwia natychmiastowe przechwycenie i przekazanie użytkownikowi potencjalnych komunikatów z silnika C.
 
-Program przekazuje ścieżkę do pliku topologii (\texttt{-i}), nazwę pliku wyjściowego (\texttt{-o}) oraz wybrany przez użytkownika algorytm (\texttt{-a}). Następnie aplikacja oczekuje na zakończenie obliczeń metodą \texttt{p.waitFor()}, po czym automatycznie odświeża widok, wczytując wygenerowane współrzędne z pliku.
-\section{Interfejs Użytkownika (UI Styling)}
-W projekcie zrezygnowano z domyślnego wyglądu komponentów Swing na rzecz nowoczesnej estetyki:
-\begin{itemize}
-    \item \textbf{Custom Styling}: Metoda \texttt{styleButton} nadaje przyciskom kolory z palety pastelowej, usuwa obramowania i zmienia kursor na \texttt{HAND\_CURSOR}.
-    \item \textbf{Layout}: Zastosowano \texttt{BoxLayout} dla panelu bocznego oraz \texttt{GridLayout} zamknięty w \texttt{CompoundBorder} dla widgetu właściwości węzła, co zapewnia czytelność i responsywność interfejsu.
-\end{itemize}
-
-\section{Specyfikacja plików danych}
-\subsection{Format Topologii (.txt)}
-Plik wejściowy czytany jest linia po linii. Każda linia musi zawierać co najmniej 4 kolumny rozdzielone białymi znakami:
-\begin{verbatim}
-[Nazwa_Krawędzi] [ID_Start] [ID_End] [Waga]
-\end{verbatim}
-
-\subsection{Format Współrzędnych (.txt)}
-Zapis i odczyt realizowany jest zgodnie ze schematem:
-\begin{verbatim}
-[ID_Węzła] [X_double] [Y_double]
-\end{verbatim}
-Współrzędne zapisywane są z precyzją do 6 miejsc po przecinku przy użyciu \texttt{Locale.US} w celu zapewnienia kropki jako separatora dziesiętnego.
+\section{Mechanizmy wejścia/wyjścia (I/O)}
+Moduł I/O obsługuje ładowanie plików tekstowych ze strukturą krawędzi i wynikowych współrzędnych za pomocą klas \texttt{FileReader} oraz \texttt{BufferedReader}. Zapis nowych współrzędnych realizowany jest poprzez \texttt{PrintWriter}. Dodatkowo aplikacja udostępnia metodę \texttt{exportToPNG()}, która poprzez wyrysowanie zawartości do obiektu \texttt{BufferedImage} generuje graficzny zrzut obszaru roboczego do pliku.
 
 \end{document}
