@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
 // klasa przechowujaca dane pojedynczego wierzcholka
@@ -43,7 +44,7 @@ public class GraphApp extends JFrame {
     private final Color BTN_SUCCESS = new Color(0, 150, 136); 
     private final Color BTN_NEUTRAL = new Color(144, 164, 174); 
     
-    // deklaracje czcionki 
+    // deklaracje krojow pisma
     private final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
     private final Font BOLD_FONT = new Font("Segoe UI", Font.BOLD, 14);
 
@@ -198,17 +199,52 @@ public class GraphApp extends JFrame {
         isUpdatingFields = false;
     }
 
-    // zmiana polozenia na podstawie recznego wpisu uzytkownika
+    // zmiana polozenia na podstawie recznego wpisu uzytkownika ze sprawdzeniami bezpieczenstwa
     private void applyManualCoordinates() {
         if (currentlySelectedNode != null && !isUpdatingFields) {
-            try { currentlySelectedNode.x = Double.parseDouble(xField.getText()); currentlySelectedNode.y = Double.parseDouble(yField.getText()); graphPanel.repaint(); } catch (Exception ex) {}
+            try { 
+                // zamiana ewentualnych przecinkow wpisanych przez uzytkownika na kropki
+                String textX = xField.getText().replace(",", ".");
+                String textY = yField.getText().replace(",", ".");
+                
+                double newX = Double.parseDouble(textX); 
+                double newY = Double.parseDouble(textY); 
+                
+                // definicja granicy wartosci dla osi w celu ochrony przed zepsuciem widoku
+                double maxLimit = 1000000.0;
+                
+                // odrzucanie zbyt oddalonych pozycji i przywracanie bezpiecznych stanow
+                if (Math.abs(newX) > maxLimit || Math.abs(newY) > maxLimit) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Wprowadzona wartość przekracza dozwolony bezpieczny limit.\nSystem odrzucił zmianę pozycji.", 
+                        "Blokada bezpieczeństwa", 
+                        JOptionPane.WARNING_MESSAGE);
+                        
+                    updatePropertiesPanel(currentlySelectedNode);
+                    return; 
+                }
+                
+                // zastosowanie nowej pozycji i aktualizacja okna
+                currentlySelectedNode.x = newX; 
+                currentlySelectedNode.y = newY; 
+                graphPanel.repaint(); 
+                
+            } catch (NumberFormatException ex) {
+                // lapanie liter lub symboli w tekscie i blokowanie bledu systemu
+                JOptionPane.showMessageDialog(this, 
+                    "Współrzędne muszą być poprawnego formatu liczbowego.\nUżyj cyfr oraz pojedynczej kropki dziesiętnej.", 
+                    "Błąd formatu", 
+                    JOptionPane.ERROR_MESSAGE);
+                    
+                updatePropertiesPanel(currentlySelectedNode);
+            }
         }
     }
 
     // przygotowanie i wywolanie procesu z zewnetrznym programem obliczeniowym
     private void runCalculation() {
         if(graphPanel.getEdges().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Najpierw wczytaj strukturę krawędzi (Menu Plik)!", "Brak danych", JOptionPane.WARNING_MESSAGE); 
+            JOptionPane.showMessageDialog(this, "Najpierw wczytaj strukturę krawędzi z pliku tektsowego!", "Brak danych", JOptionPane.WARNING_MESSAGE); 
             return;
         }
 
@@ -237,10 +273,10 @@ public class GraphApp extends JFrame {
             // aktywowanie okna dialogowego w przypadku niepowodzenia
             if (enginePath == null) {
                 JOptionPane.showMessageDialog(this, 
-                    "Nie udało się automatycznie znaleźć pliku graph_layout.exe w folderze 2 grupy.\nWskaż go ręcznie.", 
+                    "Nie udało się automatycznie znaleźć pliku obliczeniowego w folderze.\nWskaż go ręcznie z poziomu dysku.", 
                     "Wskaż silnik C", JOptionPane.INFORMATION_MESSAGE);
                 JFileChooser ch = new JFileChooser();
-                ch.setDialogTitle("Wybierz plik graph_layout.exe");
+                ch.setDialogTitle("Wybierz plik wykonywalny obliczen");
                 if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                     enginePath = ch.getSelectedFile().getAbsolutePath();
                 } else {
@@ -273,43 +309,87 @@ public class GraphApp extends JFrame {
             pb.directory(new File(enginePath).getParentFile());
             Process p = pb.start();
             
-            // odczytywanie komunikatow bledu dzialajacego algorytmu
+            // nadzrowanie procesu i zamykanie go w przypadku usterki petli
+            boolean finished = p.waitFor(15, TimeUnit.SECONDS);
+            if (!finished) {
+                p.destroyForcibly(); 
+                JOptionPane.showMessageDialog(this, 
+                    "Program obliczeniowy zawiesił się i przekroczył dozwolony limit czasu oczekiwania.\nOperacja została siłowo zatrzymana.", 
+                    "Przekroczenie limitu czasu", 
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // odczytywanie ewentualnych komunikatow usterki z dzialajacego programu
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
             StringBuilder errors = new StringBuilder(); String line;
             while ((line = errorReader.readLine()) != null) errors.append(line).append("\n");
             
-            // potwierdzanie zakonczenia dzialania zewnetrznego programu
-            int exitCode = p.waitFor(); 
+            // potwierdzanie zakonczenia dzialania zewnetrznego programu i ladowanie wylkresow
+            int exitCode = p.exitValue(); 
             if (exitCode == 0) { 
-                // wczytywanie rezultatow i srodkowanie elementow na ekranie
                 loadCoordinatesFromFile(outputFile.getAbsolutePath()); 
                 graphPanel.resetView(); 
-                JOptionPane.showMessageDialog(this, "Silnik C obliczył nowy układ grafu!"); 
+                JOptionPane.showMessageDialog(this, "Silnik zewnetrzny poprawnie obliczył układ grafu."); 
             } else {
                 String errorMsg = errors.toString().trim();
-                if (errorMsg.isEmpty()) errorMsg = "Program w C zwrócił kod błędu: " + exitCode;
-                JOptionPane.showMessageDialog(this, "Silnik C napotkał problem:\n" + errorMsg, "Awaria w C", JOptionPane.ERROR_MESSAGE);
+                if (errorMsg.isEmpty()) errorMsg = "Program zwrocil kod awaryjny o numerze " + exitCode;
+                JOptionPane.showMessageDialog(this, "Napotkano problem na etapie logiki:\n" + errorMsg, "Awaria obliczen", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) { 
-            JOptionPane.showMessageDialog(this, "Błąd systemu podczas uruchamiania:\n" + ex.getMessage(), "Błąd Systemu", JOptionPane.ERROR_MESSAGE); 
+            JOptionPane.showMessageDialog(this, "Błąd systemu glownego podczas uruchamiania procedury:\n" + ex.getMessage(), "Błąd Systemu", JOptionPane.ERROR_MESSAGE); 
             enginePath = null; 
         }
     }
 
-    // pobieranie dokumentu definiujacego ksztalt i zawartosc grafu
+    // pobieranie dokumentu definiujacego ksztalt i filtrowanie zepsutych danych
     private void loadTopology() {
         JFileChooser ch = new JFileChooser();
         if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             currentTopoFile = ch.getSelectedFile().getAbsolutePath();
             List<Edge> edges = new ArrayList<>();
+            boolean skippedFaultyWeights = false;
+            
+            // limit powstrzymujacy ladowanie ogromnych plikow do pamieci urzadzenia
+            int edgeLimit = 50000;
+
             try (BufferedReader br = new BufferedReader(new FileReader(currentTopoFile))) {
                 String line;
                 while ((line = br.readLine()) != null) {
+                    
+                    // zatrzymanie ladowania jesli plik przekroczy bezpieczny limit rozmiaru
+                    if (edges.size() >= edgeLimit) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Plik zawiera zbyt dużą ilość linii tekstu.\nWczytano tylko bezpieczną pule krawędzi, chroniąc system przed brakiem pamięci ram.", 
+                            "Limit rozmiaru", 
+                            JOptionPane.WARNING_MESSAGE);
+                        break;
+                    }
+                    
                     String[] p = line.trim().split("\\s+");
-                    if (p.length >= 4) edges.add(new Edge(p[0], Integer.parseInt(p[1]), Integer.parseInt(p[2]), Double.parseDouble(p[3])));
+                    if (p.length >= 4) {
+                        double weight = Double.parseDouble(p[3]);
+                        
+                        // badanie wagi krawedzi i ignorowanie psujacych logike liczb ujemnych oraz zer
+                        if (weight > 0) {
+                            edges.add(new Edge(p[0], Integer.parseInt(p[1]), Integer.parseInt(p[2]), weight));
+                        } else {
+                            skippedFaultyWeights = true;
+                        }
+                    }
                 }
                 graphPanel.setEdges(edges);
-            } catch (Exception ex) {}
+                
+                // powiadomienie po wczytaniu o ignorowaniu uszkodzonych krawedzi
+                if (skippedFaultyWeights) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Odrzucono niektóre krawędzie z powodu zerowej lub ujemnej wartości ich wagi.\nOchrona stabilności modeli odległościowych.", 
+                        "Raport filtrowania", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Błąd struktury w trakcie wczytywania dokumentu", "Awaria analizy tekstu", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
