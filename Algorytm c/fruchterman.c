@@ -2,20 +2,18 @@
 
 // --- ALGORYTM 2: FRUCHTERMAN-REINGOLD (Siłowy) ---
 void calculate_fruchterman(Vertex* vertices, int num_v, Edge* edges, int num_e, int iterations) {
-    double area = 1000000.0;
-    double k = sqrt(area / num_v); 
-    double t = 10.0; // "Temperatura" - maksymalny krok przesunięcia
-
+    double area = 1000000.0; 
+    double k = sqrt(area / num_v); // ustawienie optymalnej odleglosci miedzy wierzcholkami 
     for (int iter = 0; iter < iterations; iter++) {
         // 1. Odpychanie
-        for (int i = 0; i < num_v; i++) {
+        for (int i = 0; i < num_v; i++) { 
             for (int j = 0; j < num_v; j++) {
                 if (i == j) continue;
                 double dx = vertices[i].x - vertices[j].x;
                 double dy = vertices[i].y - vertices[j].y;
                 double dist = sqrt(dx * dx + dy * dy) + 0.01;
-                double force = (k * k) / dist;
-                vertices[i].x += (dx / dist) * force * 0.01; // Zmniejszony mnożnik
+                double force = (k * k) / dist; // sila odpychania
+                vertices[i].x += (dx / dist) * force * 0.01; // aktualizacja polozenia wierzcholka
                 vertices[i].y += (dy / dist) * force * 0.01;
             }
         }
@@ -30,9 +28,9 @@ void calculate_fruchterman(Vertex* vertices, int num_v, Edge* edges, int num_e, 
                 double dx = vertices[v_idx].x - vertices[u_idx].x;
                 double dy = vertices[v_idx].y - vertices[u_idx].y;
                 double dist = sqrt(dx * dx + dy * dy) + 0.01;
-                double force = (dist * dist) / k;
-                double factor = 0.005 * edges[i].weight; // Zmniejszony mnożnik
-                vertices[u_idx].x += (dx / dist) * force * factor;
+                double force = (dist * dist) / k; // sila przyciagania
+                double factor = 0.005 * edges[i].weight;
+                vertices[u_idx].x += (dx / dist) * force * factor; // oddzialywanie wierzhoclkow na siebie
                 vertices[u_idx].y += (dy / dist) * force * factor;
                 vertices[v_idx].x -= (dx / dist) * force * factor;
                 vertices[v_idx].y -= (dy / dist) * force * factor;

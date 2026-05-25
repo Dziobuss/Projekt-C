@@ -14,12 +14,12 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 // glowna klasa aplikacji z interfejsem graficznym
 public class GraphApp extends JFrame {
-    private GraphPanel graphPanel;
-    private JComboBox<String> algoSelector;
-    private String currentTopoFile = "dane.txt";
-    private JTextField idField, xField, yField;
-    private Node currentlySelectedNode = null;
-    private boolean isUpdatingFields = false;
+    private GraphPanel graphPanel; // przechowuje obiekty obiekty wymagane do rysowania grafu
+    private JComboBox<String> algoSelector; // nazwa algorytmu
+    private String currentTopoFile = "dane.txt"; // ustawienie bazowego pliku źrodłowego
+    private JTextField idField, xField, yField; // do recznego ustawiania wierzcholkow
+    private Node currentlySelectedNode = null; // pamieta ktory wierzcholek jest zaznaczony
+    private boolean isUpdatingFields = false; // zabezpieczenie przed rekurencyjna aktualizając pól tekstowych
     
     // zmienna przechowujaca sciezke do programu obliczeniowego
     private String enginePath = null;
@@ -31,14 +31,14 @@ public class GraphApp extends JFrame {
     private final Color BTN_SUCCESS = new Color(0, 150, 136); 
     private final Color BTN_NEUTRAL = new Color(144, 164, 174); 
     
-    // deklaracje krojow pisma
+    // deklaracje czcionek
     private final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
     private final Font BOLD_FONT = new Font("Segoe UI", Font.BOLD, 14);
 
     // konstruktor inicjalizujacy okno glowne
     public GraphApp() {
-        super("Wizualizacja Grafów Planarnych");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        super("Wizualizacja Grafów Planarnych"); // tytuł okna
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // działanie X w rogu aplikacji
         setSize(1200, 800);
         setLocationRelativeTo(null);
         getContentPane().setBackground(Color.WHITE);
@@ -46,10 +46,10 @@ public class GraphApp extends JFrame {
         // dodanie przestrzeni do rysowania grafu
         graphPanel = new GraphPanel();
         graphPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(180, 200, 220)));
-        add(graphPanel, BorderLayout.CENTER);
+        add(graphPanel, BorderLayout.CENTER); // ustawienia plotna
         
         // przypisanie akcji na klikniecie i przesuniecie wierzcholka
-        graphPanel.setNodeSelectionListener(new GraphPanel.NodeSelectionListener() {
+        graphPanel.setNodeSelectionListener(new GraphPanel.NodeSelectionListener() { // nasluchiwanie na dzialania uzytkownika
             @Override
             public void onNodeSelected(Node n) { currentlySelectedNode = n; updatePropertiesPanel(n); }
             @Override
@@ -61,17 +61,17 @@ public class GraphApp extends JFrame {
 
     // metoda tworzaca gorny pasek nawigacyjny
     private void createMenuBar() {
-        JMenuBar mb = new JMenuBar();
+        JMenuBar mb = new JMenuBar(); // kontener paska menu
         mb.setBackground(Color.WHITE);
         mb.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200, 210, 225))); 
-        
+        // e przechowuje informacje o tym jaka akcja zostala wykonana
         JMenu m1 = new JMenu(" Plik "); m1.setFont(MAIN_FONT);
         JMenuItem i1 = new JMenuItem("Otwórz strukturę (.txt)..."); i1.addActionListener(e -> loadTopology());
         JMenuItem i2 = new JMenuItem("Wczytaj współrzędne (.txt)..."); i2.addActionListener(e -> loadCoordinates());
         JMenuItem i3 = new JMenuItem("Zapisz współrzędne..."); i3.addActionListener(e -> saveCoordinates());
         JMenuItem i4 = new JMenuItem("Eksportuj obraz..."); i4.addActionListener(e -> exportToPNG());
-        m1.add(i1); m1.add(i2); m1.addSeparator(); m1.add(i3); m1.add(i4);
-        m1.addSeparator(); m1.add(new JMenuItem("Zakończ")).addActionListener(e -> System.exit(0));
+        m1.add(i1); m1.add(i2); m1.addSeparator(); m1.add(i3); m1.add(i4); // rozwijane listy
+        m1.addSeparator(); m1.add(new JMenuItem("Zakończ")).addActionListener(e -> System.exit(0)); // wizualne separatory
         
         JMenu m2 = new JMenu(" Widok "); m2.setFont(MAIN_FONT);
         m2.add(new JMenuItem("Przybliż")).addActionListener(e -> graphPanel.zoomIn());
@@ -97,7 +97,7 @@ public class GraphApp extends JFrame {
         l1.setFont(BOLD_FONT); l1.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         algoSelector = new JComboBox<>(new String[]{"Fruchterman-Reingold", "Tutte Embedding"});
-        algoSelector.setFont(MAIN_FONT); algoSelector.setBackground(Color.WHITE);
+        algoSelector.setFont(MAIN_FONT); algoSelector.setBackground(Color.WHITE); // v ograniczenia aby tekst sie nie rozciagal
         algoSelector.setMaximumSize(new Dimension(260, 35)); algoSelector.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         JButton runBtn = new JButton("Przelicz układ (Silnik C)");
@@ -107,14 +107,14 @@ public class GraphApp extends JFrame {
         JLabel lProps = new JLabel("Właściwości węzła:");
         lProps.setFont(BOLD_FONT); lProps.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JPanel propsBox = new JPanel(new GridLayout(3, 2, 8, 8));
+        JPanel propsBox = new JPanel(new GridLayout(3, 2, 8, 8)); // ramka ze wspolrzednymi
         propsBox.setBackground(WIDGET_BG);
         propsBox.setBorder(BorderFactory.createCompoundBorder(
             new LineBorder(new Color(200, 215, 230), 1, true), 
             new EmptyBorder(15, 15, 15, 15) 
         ));
-        propsBox.setMaximumSize(new Dimension(260, 110)); 
-        propsBox.setAlignmentX(Component.CENTER_ALIGNMENT);
+        propsBox.setMaximumSize(new Dimension(260, 110));  // ustawianie wymiarow
+        propsBox.setAlignmentX(Component.CENTER_ALIGNMENT); // ustawianie na srodku
         
         propsBox.add(new JLabel("ID:")).setFont(MAIN_FONT); 
         idField = new JTextField(); idField.setEditable(false); idField.setHorizontalAlignment(JTextField.CENTER); propsBox.add(idField);
@@ -125,7 +125,7 @@ public class GraphApp extends JFrame {
         propsBox.add(new JLabel("Oś Y:")).setFont(MAIN_FONT); 
         yField = new JTextField(); yField.setEditable(false); yField.setHorizontalAlignment(JTextField.CENTER); propsBox.add(yField);
         
-        ActionListener editL = e -> applyManualCoordinates();
+        ActionListener editL = e -> applyManualCoordinates(); // wprowadzanie zmian w menu wierzcholka
         xField.addActionListener(editL); yField.addActionListener(editL);
         xField.addFocusListener(new FocusAdapter() { public void focusLost(FocusEvent e) { applyManualCoordinates(); } });
         yField.addFocusListener(new FocusAdapter() { public void focusLost(FocusEvent e) { applyManualCoordinates(); } });
@@ -152,7 +152,8 @@ public class GraphApp extends JFrame {
         JButton resViewBtn = new JButton("Resetuj kamerę");
         styleButton(resViewBtn, BTN_NEUTRAL);
         resViewBtn.addActionListener(e -> graphPanel.resetView());
-
+        
+        // ustawianie panelu bocznego oraz ustawienia wizualne
         sp.add(l1); sp.add(Box.createRigidArea(new Dimension(0, 8))); sp.add(algoSelector); sp.add(Box.createRigidArea(new Dimension(0, 15))); sp.add(runBtn);
         sp.add(Box.createRigidArea(new Dimension(0, 35))); 
         sp.add(lProps); sp.add(Box.createRigidArea(new Dimension(0, 8))); sp.add(propsBox); sp.add(Box.createRigidArea(new Dimension(0, 5))); sp.add(lHint);
@@ -230,7 +231,7 @@ public class GraphApp extends JFrame {
 
     // przygotowanie i wywolanie procesu z zewnetrznym programem obliczeniowym
     private void runCalculation() {
-        if(graphPanel.getEdges().isEmpty()) {
+        if(graphPanel.getEdges().isEmpty()) { // sprawdzenie czy został wczytany plik
             JOptionPane.showMessageDialog(this, "Najpierw wczytaj strukturę krawędzi z pliku tektsowego!", "Brak danych", JOptionPane.WARNING_MESSAGE); 
             return;
         }
@@ -273,11 +274,11 @@ public class GraphApp extends JFrame {
         }
 
         // przechwytywanie decyzji z pola wyboru algorytmu
-        boolean isTutte = algoSelector.getSelectedItem().equals("Tutte Embedding");
+        boolean isTutte = algoSelector.getSelectedItem().equals("Tutte Embedding"); // porownywanie nazwy
         
         try {
-            File inputFile = new File(currentTopoFile).getAbsoluteFile();
-            File outputFile = new File(inputFile.getParentFile(), "wynik.txt");
+            File inputFile = new File(currentTopoFile).getAbsoluteFile(); // zamiana relatywnej na absolutna sciezke
+            File outputFile = new File(inputFile.getParentFile(), "wynik.txt"); // tworzenie pliku wyjsciowego
 
             // skladanie sekwencji dla wiersza polecen
             List<String> command = new ArrayList<>();
@@ -291,7 +292,7 @@ public class GraphApp extends JFrame {
                 command.add("-a"); 
             }
 
-            // definicja wywolywania procesu
+            // wywołanie procesu aplikacji C
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.directory(new File(enginePath).getParentFile());
             Process p = pb.start();
@@ -312,7 +313,7 @@ public class GraphApp extends JFrame {
             StringBuilder errors = new StringBuilder(); String line;
             while ((line = errorReader.readLine()) != null) errors.append(line).append("\n");
             
-            // potwierdzanie zakonczenia dzialania zewnetrznego programu i ladowanie wylkresow
+            // potwierdzanie zakonczenia dzialania zewnetrznego programu i ladowanie wykresow
             int exitCode = p.exitValue(); 
             if (exitCode == 0) { 
                 loadCoordinatesFromFile(outputFile.getAbsolutePath()); 
@@ -331,11 +332,11 @@ public class GraphApp extends JFrame {
 
     // pobieranie dokumentu definiujacego ksztalt i filtrowanie zepsutych danych
     private void loadTopology() {
-        JFileChooser ch = new JFileChooser();
-        if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            currentTopoFile = ch.getSelectedFile().getAbsolutePath();
-            List<Edge> edges = new ArrayList<>();
-            boolean skippedFaultyWeights = false;
+        JFileChooser ch = new JFileChooser(); // interfejs wybierania okienkowego
+        if (ch.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) { // zwraca wynik po dokonaniu akcji przez uzytkownika
+            currentTopoFile = ch.getSelectedFile().getAbsolutePath(); // pobranie sciezki wybranego pliku
+            List<Edge> edges = new ArrayList<>(); // tworzenie listy na krawedzie
+            boolean skippedFaultyWeights = false;// flaga sygnalizujace smieciowe dane
             
             // limit powstrzymujacy ladowanie ogromnych plikow do pamieci urzadzenia
             int edgeLimit = 50000;
@@ -345,7 +346,7 @@ public class GraphApp extends JFrame {
                 while ((line = br.readLine()) != null) {
                     
                     // zatrzymanie ladowania jesli plik przekroczy bezpieczny limit rozmiaru
-                    if (edges.size() >= edgeLimit) {
+                    if (edges.size() >= edgeLimit) { // sprawdzanie limitu
                         JOptionPane.showMessageDialog(this, 
                             "Plik zawiera zbyt dużą ilość linii tekstu.\nWczytano tylko bezpieczną pule krawędzi, chroniąc system przed brakiem pamięci ram.", 
                             "Limit rozmiaru", 
@@ -353,9 +354,9 @@ public class GraphApp extends JFrame {
                         break;
                     }
                     
-                    String[] p = line.trim().split("\\s+");
+                    String[] p = line.trim().split("\\s+"); // zabezpieczenie przed podwojnymi spacjami
                     if (p.length >= 4) {
-                        double weight = Double.parseDouble(p[3]);
+                        double weight = Double.parseDouble(p[3]); // zabezpieczenie przed zbyt mala iloscia danych
                         
                         // badanie wagi krawedzi i ignorowanie psujacych logike liczb ujemnych oraz zer
                         if (weight > 0) {
@@ -365,7 +366,7 @@ public class GraphApp extends JFrame {
                         }
                     }
                 }
-                graphPanel.setEdges(edges);
+                graphPanel.setEdges(edges); // mowimy programowi aby uzyl wczytanych danych do rysowania
                 
                 // powiadomienie po wczytaniu o ignorowaniu uszkodzonych krawedzi
                 if (skippedFaultyWeights) {
@@ -391,7 +392,7 @@ public class GraphApp extends JFrame {
         Map<Integer, Node> nodes = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             String line;
-            while ((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null) { // sczytywanie danych
                 String[] p = line.trim().split("\\s+");
                 if (p.length >= 3) nodes.put(Integer.parseInt(p[0]), new Node(Integer.parseInt(p[0]), Double.parseDouble(p[1]), Double.parseDouble(p[2])));
             }
@@ -424,7 +425,7 @@ public class GraphApp extends JFrame {
 
     // metoda wywolywana podczas wlaczania aplikacji
     public static void main(String[] args) {
-        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
-        SwingUtilities.invokeLater(() -> new GraphApp().setVisible(true));
+        try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {} // ustawienie wygladu aplikacji
+        SwingUtilities.invokeLater(() -> new GraphApp().setVisible(true)); // zabezpieczenia przed wieszaniem sie lub nieotwieraniem okna
     }
 }

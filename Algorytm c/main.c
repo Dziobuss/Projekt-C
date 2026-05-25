@@ -21,21 +21,21 @@ int main(int argc, char *argv[]) {
     char *input = NULL, *output = NULL, *algo = "smacof", *format = "txt";
     int iter = 1000;
 
-    for (int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) { // komenda help
         if (strcmp(argv[i], "-h") == 0) {
             printf("Uzycie: %s -i <in> -o <out> -a <smacof|fr> [-n iter] [-f txt|bin]\n", argv[0]);
             return 0;
         }
-        if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) input = argv[++i];
+        if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) input = argv[++i]; // czytanie flag
         else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) output = argv[++i];
         else if (strcmp(argv[i], "-a") == 0 && i + 1 < argc) algo = argv[++i];
         else if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) iter = atoi(argv[++i]);
         else if (strcmp(argv[i], "-f") == 0 && i + 1 < argc) format = argv[++i];
     }
 
-    if (!input || !output) return 1;
+    if (!input || !output) return 1; // sprawdzenie czy jest plik wejsciowy i wyjsciowy
 
-    Edge edges[500]; int num_e = 0, node_map[500], num_v = 0;
+    Edge edges[500]; int num_e = 0, node_map[500], num_v = 0; // rezerwacja miejsc na krawedzie i wierzcholki
     FILE* fin = fopen(input, "r");
     if (!fin) {
         fprintf(stderr, "Blad: Nie mozna otworzyc pliku (Kod 1)\n");
@@ -43,29 +43,28 @@ int main(int argc, char *argv[]) {
     }
 
     char e_name[20];
-    while (fscanf(fin, "%s %d %d %lf", e_name, &edges[num_e].u, &edges[num_e].v, &edges[num_e].weight) == 4) {
+    while (fscanf(fin, "%s %d %d %lf", e_name, &edges[num_e].u, &edges[num_e].v, &edges[num_e].weight) == 4) { // wczytywanie danych
         int u_f = 0, v_f = 0;
-        for(int j=0; j<num_v; j++) {
+        for(int j=0; j<num_v; j++) { // przeszukiwanie tablicy w poszukiwaniu wierzchołka aby go nie dublować
             if(node_map[j] == edges[num_e].u) u_f = 1;
             if(node_map[j] == edges[num_e].v) v_f = 1;
         }
-        if(!u_f) node_map[num_v++] = edges[num_e].u;
+        if(!u_f) node_map[num_v++] = edges[num_e].u; // dodawanie wierzcholka do tablicy jesli nie zostal znaleziony
         if(!v_f) node_map[num_v++] = edges[num_e].v;
         num_e++;
         if (num_e >= 500) break;
     }
     fclose(fin);
 
-    if (num_v == 0) {
+    if (num_v == 0) { // sprawdzenie czy jakikowliek wierzcholek zostal wczytany
         fprintf(stderr, "Blad: Bledny format danych (Kod 2)\n");
         return 2;
     }
 
-    Vertex* vertices = malloc(num_v * sizeof(Vertex));
+    Vertex* vertices = malloc(num_v * sizeof(Vertex)); // rezerwacja pamieci na wierzcholki
     if (!vertices) return 4;
 
-    // INICJALIZACJA LOSOWA - kluczowa dla wizualizacji 2D
-    for(int i=0; i<num_v; i++) {
+    for(int i=0; i<num_v; i++) { // nadawanie losowych wspolrzednych wierzchlokom
         vertices[i].id = node_map[i];
         vertices[i].x = (double)(rand() % 1000) - 500.0;
         vertices[i].y = (double)(rand() % 1000) - 500.0;
