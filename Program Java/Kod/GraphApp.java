@@ -1,4 +1,3 @@
-
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -286,7 +285,6 @@ public class GraphApp extends JFrame {
             command.add(inputFile.getAbsolutePath()); 
             command.add("-o");
             command.add(outputFile.getAbsolutePath());
-            
             // dolaczenie parametru dla specyficznego algorytmu
             if (isTutte) {
                 command.add("-a"); 
@@ -356,7 +354,9 @@ public class GraphApp extends JFrame {
                     
                     String[] p = line.trim().split("\\s+"); // zabezpieczenie przed podwojnymi spacjami
                     if (p.length >= 4) {
-                        double weight = Double.parseDouble(p[3]); // zabezpieczenie przed zbyt mala iloscia danych
+
+                        double weight = Double.parseDouble(p[3].replace(",", "."));// zabezpieczenie przed zbyt mala iloscia danych
+
                         
                         // badanie wagi krawedzi i ignorowanie psujacych logike liczb ujemnych oraz zer
                         if (weight > 0) {
@@ -375,8 +375,11 @@ public class GraphApp extends JFrame {
                         "Raport filtrowania", 
                         JOptionPane.INFORMATION_MESSAGE);
                 }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Błąd struktury w trakcie wczytywania dokumentu", "Awaria analizy tekstu", JOptionPane.ERROR_MESSAGE);
+            }  catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, 
+                    "Błąd struktury: " + ex.getClass().getSimpleName() + ": " + ex.getMessage(), 
+                    "Awaria analizy tekstu", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace(); // wypisze pełny stack trace w konsoli
             }
         }
     }
