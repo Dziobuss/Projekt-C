@@ -1,3 +1,4 @@
+
 // klasa przechowujaca dane pojedynczego wierzcholka
 public class Node {
     int id; 

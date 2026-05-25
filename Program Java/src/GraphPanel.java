@@ -1,10 +1,11 @@
-import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
+import javax.swing.*;
 
 // panel zarzadzajacy manipulacja i renderowaniem grafiki
 public class GraphPanel extends JPanel {

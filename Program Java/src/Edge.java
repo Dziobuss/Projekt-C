@@ -1,3 +1,4 @@
+
 // klasa definiujaca polaczenie miedzy dwoma wierzcholkami
 public class Edge {
     String name; 
